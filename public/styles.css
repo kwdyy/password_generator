@@ -110,6 +110,19 @@ fieldset.checkboxes legend {
     accent-color: #667eea;
 }
 
+.symbol-setting {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#symbolsChars {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
 .generate-btn {
     width: 100%;
     padding: 15px;

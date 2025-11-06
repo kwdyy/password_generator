@@ -4,7 +4,6 @@ class PasswordGenerator {
             uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             lowercase: 'abcdefghijklmnopqrstuvwxyz',
             numbers: '0123456789',
-            symbols: '!@#$%^&*()_+-=[]{}|;:,.<>/?'
         };
         
         this.initializeElements();
@@ -19,6 +18,8 @@ class PasswordGenerator {
         this.lowercaseCheck = document.getElementById('lowercase');
         this.numbersCheck = document.getElementById('numbers');
         this.symbolsCheck = document.getElementById('symbols');
+        this.symbolsChars = document.getElementById('symbolsChars');
+        this.excludeConfusingCheck = document.getElementById('excludeConfusing');
         this.generateBtn = document.getElementById('generateBtn');
         this.passwordOutput = document.getElementById('passwordOutput');
         this.copyBtn = document.getElementById('copyBtn');
@@ -34,20 +35,35 @@ class PasswordGenerator {
         
         [this.uppercaseCheck, this.lowercaseCheck, this.numbersCheck, this.symbolsCheck]
             .forEach(checkbox => {
-                checkbox.addEventListener('change', () => this.validateCheckboxes());
+                checkbox.addEventListener('change', () => this.validateInputs());
             });
+        this.symbolsChars.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^\x00-\x7F]/g, '');
+        });
     }
     
+    toHalfWidth(str) {
+        return str.replace(/[！-～]/g, (s) => {
+            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+        });
+    }
+
     updateLengthDisplay() {
         this.lengthValue.textContent = this.lengthSlider.value;
     }
     
-    validateCheckboxes() {
+    validateInputs() {
         const checkboxes = [this.uppercaseCheck, this.lowercaseCheck, this.numbersCheck, this.symbolsCheck];
         const checkedBoxes = checkboxes.filter(cb => cb.checked);
         
         if (checkedBoxes.length === 0) {
             this.showFeedback('最低1つの文字種類を選択してください', 'error');
+            this.generateBtn.disabled = true;
+            return false;
+        }
+
+        if (this.symbolsCheck.checked && this.symbolsChars.value.trim() === '') {
+            this.showFeedback('使用する記号を入力してください', 'error');
             this.generateBtn.disabled = true;
             return false;
         }
@@ -64,25 +80,44 @@ class PasswordGenerator {
     }
     
     generatePassword() {
-        if (!this.validateCheckboxes()) {
+        if (!this.validateInputs()) {
             return;
         }
         
         const length = parseInt(this.lengthSlider.value);
         let characterSet = '';
+
+        let uppercaseChars = this.characters.uppercase;
+        let lowercaseChars = this.characters.lowercase;
+        let numbersChars = this.characters.numbers;
+        let symbolsChars = this.symbolsChars.value;
+
+        if (this.excludeConfusingCheck.checked) {
+            const confusingRegex = /[Ilji1Oo0]/g;
+            uppercaseChars = uppercaseChars.replace(confusingRegex, '');
+            lowercaseChars = lowercaseChars.replace(confusingRegex, '');
+            numbersChars = numbersChars.replace(confusingRegex, '');
+            symbolsChars = symbolsChars.replace(confusingRegex, '');
+        }
         
-        if (this.uppercaseCheck.checked) characterSet += this.characters.uppercase;
-        if (this.lowercaseCheck.checked) characterSet += this.characters.lowercase;
-        if (this.numbersCheck.checked) characterSet += this.characters.numbers;
-        if (this.symbolsCheck.checked) characterSet += this.characters.symbols;
+        if (this.uppercaseCheck.checked) characterSet += uppercaseChars;
+        if (this.lowercaseCheck.checked) characterSet += lowercaseChars;
+        if (this.numbersCheck.checked) characterSet += numbersChars;
+        if (this.symbolsCheck.checked) characterSet += symbolsChars;
+
+        if (characterSet.length === 0) {
+            this.showFeedback('選択された文字種ではパスワードを生成できません。文字種設定を確認してください。', 'error');
+            this.generateBtn.disabled = true;
+            return;
+        }
         
         let password = '';
         
         const selectedTypes = [];
-        if (this.uppercaseCheck.checked) selectedTypes.push(this.characters.uppercase);
-        if (this.lowercaseCheck.checked) selectedTypes.push(this.characters.lowercase);
-        if (this.numbersCheck.checked) selectedTypes.push(this.characters.numbers);
-        if (this.symbolsCheck.checked) selectedTypes.push(this.characters.symbols);
+        if (this.uppercaseCheck.checked && uppercaseChars.length > 0) selectedTypes.push(uppercaseChars);
+        if (this.lowercaseCheck.checked && lowercaseChars.length > 0) selectedTypes.push(lowercaseChars);
+        if (this.numbersCheck.checked && numbersChars.length > 0) selectedTypes.push(numbersChars);
+        if (this.symbolsCheck.checked && symbolsChars.length > 0) selectedTypes.push(symbolsChars);
         
         for (let i = 0; i < selectedTypes.length && i < length; i++) {
             const typeChars = selectedTypes[i];
@@ -114,8 +149,9 @@ class PasswordGenerator {
         const hasUpper = /[A-Z]/.test(password);
         const hasLower = /[a-z]/.test(password);
         const hasNumbers = /[0-9]/.test(password);
-        const hasSymbols = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>/?]/.test(password);
-        
+        const symbolsRegex = new RegExp(`[${this.symbolsChars.value.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}]`);
+        const hasSymbols = this.symbolsCheck.checked && this.symbolsChars.value ? symbolsRegex.test(password) : false;
+
         let score = 0;
         let strengthText = '';
         let strengthClass = '';
