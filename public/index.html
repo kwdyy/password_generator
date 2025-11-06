@@ -12,13 +12,13 @@
         
         <div class="settings">
             <div class="setting-group">
-                <label for="length">パスワードの長さ: <span id="lengthValue">12</span></label>
-                <input type="range" id="length" min="8" max="32" value="12">
+                <label for="length">パスワードの長さ: <span id="lengthValue">15</span></label>
+                <input type="range" id="length" min="8" max="64" value="15">
             </div>
 
             <div class="setting-group">
-                <h3>含める文字の種類</h3>
-                <div class="checkboxes">
+                <fieldset class="checkboxes">
+                    <legend>含める文字の種類</legend>
                     <label>
                         <input type="checkbox" id="uppercase" checked>
                         大文字 (A-Z)
@@ -35,7 +35,7 @@
                         <input type="checkbox" id="symbols" checked>
                         記号 (!@#$%^&*()_+-=[]{}|;:,.<>/?)
                     </label>
-                </div>
+                </fieldset>
             </div>
 
             <button id="generateBtn" class="generate-btn">生成する</button>
