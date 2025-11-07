@@ -38,16 +38,10 @@ class PasswordGenerator {
                 checkbox.addEventListener('change', () => this.validateInputs());
             });
         this.symbolsChars.addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/[^\x00-\x7F]/g, '');
+            e.target.value = e.target.value.replace(/[^\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/g, '');
         });
     }
     
-    toHalfWidth(str) {
-        return str.replace(/[！-～]/g, (s) => {
-            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-        });
-    }
-
     updateLengthDisplay() {
         this.lengthValue.textContent = this.lengthSlider.value;
     }
